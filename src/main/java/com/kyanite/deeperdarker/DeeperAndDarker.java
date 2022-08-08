@@ -1,10 +1,7 @@
 package com.kyanite.deeperdarker;
 
 import com.kyanite.deeperdarker.client.rendering.armor.WardenArmorRenderer;
-import com.kyanite.deeperdarker.client.rendering.entity.SculkLeechRenderer;
-import com.kyanite.deeperdarker.client.rendering.entity.SculkSnapperRenderer;
-import com.kyanite.deeperdarker.client.rendering.entity.SculkWormRenderer;
-import com.kyanite.deeperdarker.client.rendering.entity.ShatteredRenderer;
+import com.kyanite.deeperdarker.client.rendering.entity.*;
 import com.kyanite.deeperdarker.registry.blocks.DDBlocks;
 import com.kyanite.deeperdarker.registry.blocks.entity.DDBlockEntityTypes;
 import com.kyanite.deeperdarker.registry.enchantments.DDEnchantments;
@@ -80,7 +77,16 @@ public class DeeperAndDarker {
             EntityRenderers.register(DDEntities.SCULK_SNAPPER.get(), SculkSnapperRenderer::new);
             EntityRenderers.register(DDEntities.SCULK_WORM.get(), SculkWormRenderer::new);
             EntityRenderers.register(DDEntities.SCULK_LEECH.get(), SculkLeechRenderer::new);
-            EntityRenderers.register(DDEntities.SHATTERED.get(), ShatteredRenderer::new);
+        }
+
+        @SubscribeEvent
+        public static void registerLayers(EntityRenderersEvent.RegisterLayerDefinitions e) {
+            e.registerLayerDefinition(ShatteredModel.LAYER_LOCATION, ShatteredModel::createBodyLayer);
+        }
+
+        @SubscribeEvent
+        public static void registerRenderers(EntityRenderersEvent.RegisterRenderers e) {
+            e.registerEntityRenderer(DDEntities.SHATTERED.get(), ShatteredRenderer::new);
         }
 
         @SubscribeEvent

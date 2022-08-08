@@ -43,10 +43,11 @@ import software.bernie.geckolib3.core.manager.AnimationFactory;
 
 import java.util.function.BiConsumer;
 
-public class ShatteredEntity extends Monster implements IAnimatable, VibrationListener.VibrationListenerConfig {
-    private final AnimationFactory factory = new AnimationFactory(this);
-
+public class ShatteredEntity extends Monster implements VibrationListener.VibrationListenerConfig {
     private final DynamicGameEventListener<VibrationListener> dynamicGameEventListener;
+
+    public AnimationState idleAnimationState = new AnimationState();
+    public AnimationState walkingAnimationState = new AnimationState();
 
     public BlockPos disturbanceLocation = null;
 
@@ -71,13 +72,12 @@ public class ShatteredEntity extends Monster implements IAnimatable, VibrationLi
     }
 
     @Override
-    public void registerControllers(AnimationData data) {
-        data.addAnimationController(new AnimationController(this, "controller", 3, this::predicate));
-    }
-
-    @Override
     public boolean dampensVibrations() {
         return true;
+    }
+
+    private boolean isMovingOnLand() {
+        return this.onGround && this.getDeltaMovement().horizontalDistanceSqr() > 1.0E-6D && !this.isInWaterOrBubble();
     }
 
     @Override
@@ -86,6 +86,15 @@ public class ShatteredEntity extends Monster implements IAnimatable, VibrationLi
         if(isDeadOrDying()) return;
 
         Level level = this.level;
+
+        if (this.level.isClientSide()) {
+            if (this.isMovingOnLand()) {
+                walkingAnimationState.startIfStopped(this.tickCount);
+            } else {
+                walkingAnimationState.stop();
+                idleAnimationState.startIfStopped(this.tickCount);
+            }
+        }
         if(level instanceof ServerLevel serverlevel) {
             this.dynamicGameEventListener.getListener().tick(serverlevel);
         }
@@ -131,20 +140,6 @@ public class ShatteredEntity extends Monster implements IAnimatable, VibrationLi
     @Override
     public MobType getMobType() {
         return DDMobTypes.SCULK;
-    }
-
-    private <E extends IAnimatable> PlayState predicate(AnimationEvent<E> event) {
-        if(event.isMoving()) {
-            event.getController().setAnimation(new AnimationBuilder().addAnimation("animation.shattered.walk", true));
-            return PlayState.CONTINUE;
-        }
-        event.getController().setAnimation(new AnimationBuilder().addAnimation("animation.shattered.idle", true));
-        return PlayState.CONTINUE;
-    }
-
-    @Override
-    public AnimationFactory getFactory() {
-        return this.factory;
     }
 
     @Override
